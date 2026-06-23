@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alabama WARN Act Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3154;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    header h1 { font-size: 1.25rem; font-weight: 600; color: #e2e8f0; }
+    header span { font-size: 0.8rem; color: #64748b; }
+
+    nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #2d3154;
+      background: #1a1d2e;
+      padding: 0 2rem;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.25rem;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    nav button:hover { color: #e2e8f0; }
+    nav button.active { color: #818cf8; border-bottom-color: #818cf8; }
+
+    main { padding: 1.5rem 2rem; max-width: 1400px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    #search-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    #search-input {
+      flex: 1;
+      max-width: 480px;
+      background: #1a1d2e;
+      border: 1px solid #2d3154;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.875rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #search-input:focus { border-color: #818cf8; }
+    #search-input::placeholder { color: #475569; }
+
+    .result-count {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      min-height: 1.2em;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3154;
+      color: #94a3b8;
+      font-weight: 500;
+      padding: 0.6rem 0.875rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th.num { text-align: right; }
+
+    td {
+      border-bottom: 1px solid #1e2235;
+      padding: 0.55rem 0.875rem;
+      white-space: nowrap;
+    }
+
+    tr:nth-child(even) td { background: #13162a; }
+    tr:hover td { background: #1e2744; }
+
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .badge {
+      border-radius: 4px;
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+    }
+
+    .badge-closure { background: #3b1818; color: #fca5a5; }
+    .badge-layoff  { background: #1c2a3b; color: #93c5fd; }
+
+    .empty {
+      color: #475569;
+      font-size: 0.875rem;
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    .loading { color: #475569; font-size: 0.875rem; padding: 2rem 0; text-align: center; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Alabama WARN Act Tracker</h1>
+  <span>workforce.alabama.gov</span>
+</header>
+
+<nav>
+  <button class="active" data-tab="search">Search</button>
+  <button data-tab="top-size">Top by Size</button>
+  <button data-tab="top-recent">Most Recent</button>
+</nav>
+
+<main>
+  <div id="search" class="tab-panel active">
+    <div id="search-bar">
+      <input id="search-input" type="search" placeholder="Search by company name…" autocomplete="off" />
+    </div>
+    <div class="result-count" id="search-count"></div>
+    <div class="table-wrap">
+      <table id="search-table">
+        <thead><tr>
+          <th>Company</th><th>City</th><th>Type</th>
+          <th class="num">Employees</th><th>Announced</th><th>Effective</th><th>Case ID</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="top-size" class="tab-panel">
+    <div class="result-count" id="size-count"></div>
+    <div class="table-wrap">
+      <table id="size-table">
+        <thead><tr>
+          <th>Company</th><th>City</th><th>Type</th>
+          <th class="num">Employees</th><th>Announced</th><th>Effective</th><th>Case ID</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="top-recent" class="tab-panel">
+    <div class="result-count" id="recent-count"></div>
+    <div class="table-wrap">
+      <table id="recent-table">
+        <thead><tr>
+          <th>Company</th><th>City</th><th>Type</th>
+          <th class="num">Employees</th><th>Announced</th><th>Effective</th><th>Case ID</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+  // --- Tab switching ---
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // --- Rendering ---
+  function typeBadge(type) {
+    if (!type) return '';
+    const cls = type.toLowerCase().includes('clos') ? 'badge-closure' : 'badge-layoff';
+    const label = type.replace(' *', '');
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function renderRows(tbody, rows) {
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No results.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.company_name ?? ''}</td>
+        <td>${r.city ?? ''}</td>
+        <td>${typeBadge(r.event_type)}</td>
+        <td class="num">${r.affected_employees != null ? r.affected_employees.toLocaleString() : ''}</td>
+        <td>${r.announcement_date ?? ''}</td>
+        <td>${r.effective_date ?? ''}</td>
+        <td>${r.case_id}</td>
+      </tr>`).join('');
+  }
+
+  // --- Search ---
+  let searchTimer = null;
+  const searchInput = document.getElementById('search-input');
+  const searchCount = document.getElementById('search-count');
+  const searchTbody = document.querySelector('#search-table tbody');
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = searchInput.value.trim();
+    if (!q) { searchCount.textContent = ''; searchTbody.innerHTML = ''; return; }
+    searchTimer = setTimeout(() => runSearch(q), 200);
+  });
+
+  async function runSearch(q) {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    const n = data.count;
+    searchCount.textContent = n ? `${n} result${n !== 1 ? 's' : ''}` : 'No results.';
+    renderRows(searchTbody, data.results);
+  }
+
+  // --- Top by size ---
+  async function loadTopSize() {
+    const res = await fetch('/api/top-size');
+    const data = await res.json();
+    document.getElementById('size-count').textContent = `Top ${data.results.length} by employees affected`;
+    renderRows(document.querySelector('#size-table tbody'), data.results);
+  }
+
+  // --- Most recent ---
+  async function loadTopRecent() {
+    const res = await fetch('/api/top-recent');
+    const data = await res.json();
+    document.getElementById('recent-count').textContent = `${data.results.length} most recent notices`;
+    renderRows(document.querySelector('#recent-table tbody'), data.results);
+  }
+
+  // Load static tabs on page load
+  loadTopSize();
+  loadTopRecent();
+  searchInput.focus();
+</script>
+</body>
+</html>

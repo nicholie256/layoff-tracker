@@ -22,7 +22,6 @@
       align-items: baseline;
       gap: 1rem;
     }
-
     header h1 { font-size: 1.25rem; font-weight: 600; color: #e2e8f0; }
     header span { font-size: 0.8rem; color: #64748b; }
 
@@ -33,7 +32,6 @@
       background: #1a1d2e;
       padding: 0 2rem;
     }
-
     nav button {
       background: none;
       border: none;
@@ -44,10 +42,85 @@
       padding: 0.75rem 1.25rem;
       transition: color 0.15s, border-color 0.15s;
     }
-
     nav button:hover { color: #e2e8f0; }
     nav button.active { color: #818cf8; border-bottom-color: #818cf8; }
 
+    /* Filter bar */
+    #filter-bar {
+      background: #13162a;
+      border-bottom: 1px solid #2d3154;
+      padding: 0.75rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-label {
+      color: #64748b;
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    /* Toggle buttons for event type */
+    .toggle-group { display: flex; gap: 2px; }
+    .toggle-group button {
+      background: #1e2235;
+      border: 1px solid #2d3154;
+      border-radius: 4px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.75rem;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .toggle-group button:hover { background: #252a42; color: #e2e8f0; }
+    .toggle-group button.active {
+      background: #2e3460;
+      border-color: #818cf8;
+      color: #c7d2fe;
+    }
+
+    /* Year inputs */
+    .filter-input {
+      background: #1e2235;
+      border: 1px solid #2d3154;
+      border-radius: 4px;
+      color: #e2e8f0;
+      font-size: 0.82rem;
+      padding: 0.3rem 0.6rem;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 5rem;
+    }
+    .filter-input:focus { border-color: #818cf8; }
+    .filter-input::placeholder { color: #475569; }
+
+    #min-employees-input { width: 6rem; }
+
+    .filter-reset {
+      background: none;
+      border: none;
+      color: #475569;
+      cursor: pointer;
+      font-size: 0.78rem;
+      margin-left: auto;
+      padding: 0.25rem 0.5rem;
+      text-decoration: underline;
+      transition: color 0.15s;
+    }
+    .filter-reset:hover { color: #94a3b8; }
+
+    /* Main content */
     main { padding: 1.5rem 2rem; max-width: 1400px; }
 
     .tab-panel { display: none; }
@@ -71,7 +144,6 @@
       outline: none;
       transition: border-color 0.15s;
     }
-
     #search-input:focus { border-color: #818cf8; }
     #search-input::placeholder { color: #475569; }
 
@@ -84,11 +156,7 @@
 
     .table-wrap { overflow-x: auto; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
     th {
       background: #1a1d2e;
@@ -99,7 +167,6 @@
       text-align: left;
       white-space: nowrap;
     }
-
     th.num { text-align: right; }
 
     td {
@@ -107,10 +174,8 @@
       padding: 0.55rem 0.875rem;
       white-space: nowrap;
     }
-
     tr:nth-child(even) td { background: #13162a; }
     tr:hover td { background: #1e2744; }
-
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
     .badge {
@@ -119,18 +184,10 @@
       font-size: 0.75rem;
       padding: 0.15rem 0.5rem;
     }
-
     .badge-closure { background: #3b1818; color: #fca5a5; }
     .badge-layoff  { background: #1c2a3b; color: #93c5fd; }
 
-    .empty {
-      color: #475569;
-      font-size: 0.875rem;
-      padding: 2rem 0;
-      text-align: center;
-    }
-
-    .loading { color: #475569; font-size: 0.875rem; padding: 2rem 0; text-align: center; }
+    .empty { color: #475569; font-size: 0.875rem; padding: 2rem 0; text-align: center; }
   </style>
 </head>
 <body>
@@ -145,6 +202,31 @@
   <button data-tab="top-size">Top by Size</button>
   <button data-tab="top-recent">Most Recent</button>
 </nav>
+
+<div id="filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">Type</span>
+    <div class="toggle-group" id="type-toggle">
+      <button class="active" data-value="">All</button>
+      <button data-value="Closure">Closure</button>
+      <button data-value="Layoff">Layoff</button>
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Year</span>
+    <input class="filter-input" id="year-from" type="number" placeholder="From" min="1998" max="2026" />
+    <span style="color:#475569">–</span>
+    <input class="filter-input" id="year-to"   type="number" placeholder="To"   min="1998" max="2026" />
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Min employees</span>
+    <input class="filter-input" id="min-employees-input" type="number" placeholder="Any" min="1" />
+  </div>
+
+  <button class="filter-reset" id="reset-filters">Reset filters</button>
+</div>
 
 <main>
   <div id="search" class="tab-panel active">
@@ -192,21 +274,62 @@
 
 <script>
   // --- Tab switching ---
+  let activeTab = 'search';
+
   document.querySelectorAll('nav button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
+      activeTab = btn.dataset.tab;
+      document.getElementById(activeTab).classList.add('active');
+      refreshActiveTab();
     });
   });
+
+  // --- Filters ---
+  let eventType = '';
+
+  document.querySelectorAll('#type-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#type-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      eventType = btn.dataset.value;
+      refreshAll();
+    });
+  });
+
+  document.getElementById('year-from').addEventListener('change', refreshAll);
+  document.getElementById('year-to').addEventListener('change', refreshAll);
+  document.getElementById('min-employees-input').addEventListener('change', refreshAll);
+
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    eventType = '';
+    document.querySelectorAll('#type-toggle button').forEach(b => b.classList.remove('active'));
+    document.querySelector('#type-toggle button[data-value=""]').classList.add('active');
+    document.getElementById('year-from').value = '';
+    document.getElementById('year-to').value = '';
+    document.getElementById('min-employees-input').value = '';
+    refreshAll();
+  });
+
+  function getFilterParams() {
+    const p = new URLSearchParams();
+    if (eventType) p.set('event_type', eventType);
+    const yFrom = document.getElementById('year-from').value;
+    const yTo   = document.getElementById('year-to').value;
+    const minEmp = document.getElementById('min-employees-input').value;
+    if (yFrom) p.set('year_from', yFrom);
+    if (yTo)   p.set('year_to',   yTo);
+    if (minEmp) p.set('min_employees', minEmp);
+    return p;
+  }
 
   // --- Rendering ---
   function typeBadge(type) {
     if (!type) return '';
-    const cls = type.toLowerCase().includes('clos') ? 'badge-closure' : 'badge-layoff';
-    const label = type.replace(' *', '');
-    return `<span class="badge ${cls}">${label}</span>`;
+    const cls = type.toLowerCase().startsWith('clos') ? 'badge-closure' : 'badge-layoff';
+    return `<span class="badge ${cls}">${type.replace(' *', '')}</span>`;
   }
 
   function renderRows(tbody, rows) {
@@ -229,41 +352,64 @@
   // --- Search ---
   let searchTimer = null;
   const searchInput = document.getElementById('search-input');
-  const searchCount = document.getElementById('search-count');
-  const searchTbody = document.querySelector('#search-table tbody');
 
   searchInput.addEventListener('input', () => {
     clearTimeout(searchTimer);
     const q = searchInput.value.trim();
-    if (!q) { searchCount.textContent = ''; searchTbody.innerHTML = ''; return; }
-    searchTimer = setTimeout(() => runSearch(q), 200);
+    if (!q) {
+      document.getElementById('search-count').textContent = '';
+      document.querySelector('#search-table tbody').innerHTML = '';
+      return;
+    }
+    searchTimer = setTimeout(runSearch, 200);
   });
 
-  async function runSearch(q) {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+  async function runSearch() {
+    const q = searchInput.value.trim();
+    if (!q) return;
+    const p = getFilterParams();
+    p.set('q', q);
+    const res = await fetch(`/api/search?${p}`);
     const data = await res.json();
     const n = data.count;
-    searchCount.textContent = n ? `${n} result${n !== 1 ? 's' : ''}` : 'No results.';
-    renderRows(searchTbody, data.results);
+    document.getElementById('search-count').textContent =
+      n ? `${n} result${n !== 1 ? 's' : ''}` : 'No results.';
+    renderRows(document.querySelector('#search-table tbody'), data.results);
   }
 
   // --- Top by size ---
   async function loadTopSize() {
-    const res = await fetch('/api/top-size');
+    const p = getFilterParams();
+    const res = await fetch(`/api/top-size?${p}`);
     const data = await res.json();
-    document.getElementById('size-count').textContent = `Top ${data.results.length} by employees affected`;
+    document.getElementById('size-count').textContent =
+      `${data.results.length} notices — sorted by employees affected`;
     renderRows(document.querySelector('#size-table tbody'), data.results);
   }
 
   // --- Most recent ---
   async function loadTopRecent() {
-    const res = await fetch('/api/top-recent');
+    const p = getFilterParams();
+    const res = await fetch(`/api/top-recent?${p}`);
     const data = await res.json();
-    document.getElementById('recent-count').textContent = `${data.results.length} most recent notices`;
+    document.getElementById('recent-count').textContent =
+      `${data.results.length} notices — sorted by announcement date`;
     renderRows(document.querySelector('#recent-table tbody'), data.results);
   }
 
-  // Load static tabs on page load
+  function refreshActiveTab() {
+    if (activeTab === 'search') runSearch();
+    else if (activeTab === 'top-size') loadTopSize();
+    else if (activeTab === 'top-recent') loadTopRecent();
+  }
+
+  function refreshAll() {
+    runSearch();
+    loadTopSize();
+    loadTopRecent();
+  }
+
+  // Initial load
   loadTopSize();
   loadTopRecent();
   searchInput.focus();

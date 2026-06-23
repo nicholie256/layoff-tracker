@@ -63,6 +63,9 @@ class WarnApp(App):
     BINDINGS = [
         Binding("ctrl+q", "quit", "Quit"),
         Binding("ctrl+r", "refresh", "Refresh data"),
+        Binding("f1", "switch_tab('search')", "Search", priority=True),
+        Binding("f2", "switch_tab('top-size')", "Top Size", priority=True),
+        Binding("f3", "switch_tab('top-recent')", "Recent", priority=True),
     ]
 
     TITLE = "Alabama WARN Act Tracker"
@@ -90,6 +93,7 @@ class WarnApp(App):
 
         self._load_top_size()
         self._load_top_recent()
+        self.query_one("#search-input", Input).focus()
 
     def _load_top_size(self) -> None:
         conn = _get_conn()
@@ -157,6 +161,11 @@ class WarnApp(App):
 
         count = len(rows)
         label.update(f"{count} result{'s' if count != 1 else ''}" if count else "No results.")
+
+    def action_switch_tab(self, tab_id: str) -> None:
+        self.query_one(TabbedContent).active = tab_id
+        if tab_id == "search":
+            self.query_one("#search-input", Input).focus()
 
     def action_refresh(self) -> None:
         self._load_top_size()

@@ -215,9 +215,9 @@
 
   <div class="filter-group">
     <span class="filter-label">Year</span>
-    <input class="filter-input" id="year-from" type="number" placeholder="From" min="1998" max="2026" />
+    <input class="filter-input" id="year-from" type="number" placeholder="From" min="1998" />
     <span style="color:#475569">–</span>
-    <input class="filter-input" id="year-to"   type="number" placeholder="To"   min="1998" max="2026" />
+    <input class="filter-input" id="year-to"   type="number" placeholder="To"   min="1998" />
   </div>
 
   <div class="filter-group">
@@ -325,11 +325,26 @@
     return p;
   }
 
+  // Fix: set year max dynamically so it never becomes stale
+  const currentYear = new Date().getFullYear();
+  document.getElementById('year-from').max = currentYear;
+  document.getElementById('year-to').max = currentYear;
+
   // --- Rendering ---
+  function escapeHtml(val) {
+    if (val == null) return '';
+    return String(val)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function typeBadge(type) {
     if (!type) return '';
     const cls = type.toLowerCase().startsWith('clos') ? 'badge-closure' : 'badge-layoff';
-    return `<span class="badge ${cls}">${type.replace(' *', '')}</span>`;
+    return `<span class="badge ${cls}">${escapeHtml(type.replace(' *', ''))}</span>`;
   }
 
   function renderRows(tbody, rows) {
@@ -339,14 +354,19 @@
     }
     tbody.innerHTML = rows.map(r => `
       <tr>
-        <td>${r.company_name ?? ''}</td>
-        <td>${r.city ?? ''}</td>
+        <td>${escapeHtml(r.company_name)}</td>
+        <td>${escapeHtml(r.city)}</td>
         <td>${typeBadge(r.event_type)}</td>
         <td class="num">${r.affected_employees != null ? r.affected_employees.toLocaleString() : ''}</td>
-        <td>${r.announcement_date ?? ''}</td>
-        <td>${r.effective_date ?? ''}</td>
-        <td>${r.case_id}</td>
+        <td>${escapeHtml(r.announcement_date)}</td>
+        <td>${escapeHtml(r.effective_date)}</td>
+        <td>${escapeHtml(r.case_id)}</td>
       </tr>`).join('');
+  }
+
+  function showError(countEl, tbodyEl) {
+    countEl.textContent = 'Error loading data. Is the server running?';
+    tbodyEl.innerHTML = '';
   }
 
   // --- Search ---
@@ -369,32 +389,56 @@
     if (!q) return;
     const p = getFilterParams();
     p.set('q', q);
-    const res = await fetch(`/api/search?${p}`);
-    const data = await res.json();
-    const n = data.count;
-    document.getElementById('search-count').textContent =
-      n ? `${n} result${n !== 1 ? 's' : ''}` : 'No results.';
-    renderRows(document.querySelector('#search-table tbody'), data.results);
+    try {
+      const res = await fetch(`/api/search?${p}`);
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      const n = data.count;
+      document.getElementById('search-count').textContent =
+        n ? `${n} result${n !== 1 ? 's' : ''}` : 'No results.';
+      renderRows(document.querySelector('#search-table tbody'), data.results);
+    } catch {
+      showError(
+        document.getElementById('search-count'),
+        document.querySelector('#search-table tbody'),
+      );
+    }
   }
 
   // --- Top by size ---
   async function loadTopSize() {
     const p = getFilterParams();
-    const res = await fetch(`/api/top-size?${p}`);
-    const data = await res.json();
-    document.getElementById('size-count').textContent =
-      `${data.results.length} notices — sorted by employees affected`;
-    renderRows(document.querySelector('#size-table tbody'), data.results);
+    try {
+      const res = await fetch(`/api/top-size?${p}`);
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      document.getElementById('size-count').textContent =
+        `${data.results.length} notices — sorted by employees affected`;
+      renderRows(document.querySelector('#size-table tbody'), data.results);
+    } catch {
+      showError(
+        document.getElementById('size-count'),
+        document.querySelector('#size-table tbody'),
+      );
+    }
   }
 
   // --- Most recent ---
   async function loadTopRecent() {
     const p = getFilterParams();
-    const res = await fetch(`/api/top-recent?${p}`);
-    const data = await res.json();
-    document.getElementById('recent-count').textContent =
-      `${data.results.length} notices — sorted by announcement date`;
-    renderRows(document.querySelector('#recent-table tbody'), data.results);
+    try {
+      const res = await fetch(`/api/top-recent?${p}`);
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      document.getElementById('recent-count').textContent =
+        `${data.results.length} notices — sorted by announcement date`;
+      renderRows(document.querySelector('#recent-table tbody'), data.results);
+    } catch {
+      showError(
+        document.getElementById('recent-count'),
+        document.querySelector('#recent-table tbody'),
+      );
+    }
   }
 
   function refreshActiveTab() {
@@ -404,7 +448,13 @@
   }
 
   function refreshAll() {
-    runSearch();
+    const q = searchInput.value.trim();
+    if (!q) {
+      document.getElementById('search-count').textContent = '';
+      document.querySelector('#search-table tbody').innerHTML = '';
+    } else {
+      runSearch();
+    }
     loadTopSize();
     loadTopRecent();
   }

@@ -3,7 +3,7 @@
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse
@@ -26,7 +26,7 @@ def _rows_to_dicts(rows) -> list[dict]:
 
 
 def _filter_clauses(
-    event_type: Optional[str],
+    event_type: Optional[Literal["Closure", "Layoff"]],
     year_from: Optional[int],
     year_to: Optional[int],
     min_employees: Optional[int],
@@ -62,7 +62,7 @@ def index():
 @app.get("/api/search")
 def search(
     q: str = Query(..., min_length=1),
-    event_type: Optional[str] = None,
+    event_type: Optional[Literal["Closure", "Layoff"]] = None,
     year_from: Optional[int] = None,
     year_to: Optional[int] = None,
     min_employees: Optional[int] = None,
@@ -78,17 +78,15 @@ def search(
          WHERE {' AND '.join(clauses)}
          ORDER BY announcement_date DESC
     """
-    conn = db.get_connection()
-    rows = conn.execute(sql, params).fetchall()
-    conn.close()
-    results = _rows_to_dicts(rows)
+    with db.get_db() as conn:
+        results = _rows_to_dicts(conn.execute(sql, params).fetchall())
     return {"results": results, "count": len(results)}
 
 
 @app.get("/api/top-size")
 def top_size(
     limit: int = Query(100, ge=1, le=1000),
-    event_type: Optional[str] = None,
+    event_type: Optional[Literal["Closure", "Layoff"]] = None,
     year_from: Optional[int] = None,
     year_to: Optional[int] = None,
     min_employees: Optional[int] = None,
@@ -104,16 +102,15 @@ def top_size(
          ORDER BY affected_employees DESC
          LIMIT ?
     """
-    conn = db.get_connection()
-    rows = conn.execute(sql, params + [limit]).fetchall()
-    conn.close()
-    return {"results": _rows_to_dicts(rows)}
+    with db.get_db() as conn:
+        results = _rows_to_dicts(conn.execute(sql, params + [limit]).fetchall())
+    return {"results": results}
 
 
 @app.get("/api/top-recent")
 def top_recent(
     limit: int = Query(100, ge=1, le=1000),
-    event_type: Optional[str] = None,
+    event_type: Optional[Literal["Closure", "Layoff"]] = None,
     year_from: Optional[int] = None,
     year_to: Optional[int] = None,
     min_employees: Optional[int] = None,
@@ -129,10 +126,9 @@ def top_recent(
          ORDER BY announcement_date DESC
          LIMIT ?
     """
-    conn = db.get_connection()
-    rows = conn.execute(sql, params + [limit]).fetchall()
-    conn.close()
-    return {"results": _rows_to_dicts(rows)}
+    with db.get_db() as conn:
+        results = _rows_to_dicts(conn.execute(sql, params + [limit]).fetchall())
+    return {"results": results}
 
 
 if __name__ == "__main__":
